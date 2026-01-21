@@ -14,6 +14,14 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+app.get("/api", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "API is running fine",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.post("/api/send-whatsappMessage", sendWhatsappMessage);
 app.post("/api/send-whatsappMessage-hod", sendWhatsappMessageHod);
 
