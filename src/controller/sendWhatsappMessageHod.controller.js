@@ -1,21 +1,66 @@
 import axiosclient from "../../utils/axiosConnector.js";
 import { sendPayloadForWhatsappMessage } from "../utils/whatsappMessage.utils.js";
 
+// Helper to sanitize text - removes newlines, tabs, and excessive spaces
+const sanitizeText = (text) => {
+  if (!text) return "N/A";
+  return String(text)
+    .replace(/[\r\n\t]/g, " ") // Replace newlines and tabs with space
+    .replace(/\s{2,}/g, " ") // Replace multiple spaces with single space
+    .trim();
+};
+
 const sendWhatsappMessageHod = async (req, res) => {
   console.log("HOD WhatsApp message sending...");
   const { employeId, tableid } = req.query;
-  const { whomtoSend, employeeName, who } = req.body;
+  const {
+    whomtoSend,
+    employeeName,
+    empId,
+    department,
+    leaveType,
+    fromDate,
+    toDate,
+    totalDays,
+    reason,
+  } = req.body;
+
   const phoneNumber = whomtoSend;
-  const templateName = "leave_request_form_backend"; // Update this if HOD has a different template
+  const templateName = "hod_approve";
   const templateLanguage = "en_US";
   const dynamicLink = `${employeId}/${tableid}`;
+
   const enhancedComponents = [
     {
       type: "body",
       parameters: [
         {
           type: "text",
-          text: employeeName,
+          text: sanitizeText(employeeName),
+        },
+        {
+          type: "text",
+          text: sanitizeText(department),
+        },
+        {
+          type: "text",
+          text: sanitizeText(leaveType),
+        },
+        {
+          type: "text",
+          text: sanitizeText(fromDate),
+        },
+        {
+          type: "text",
+          text: sanitizeText(toDate),
+        },
+        {
+          type: "text",
+          text: sanitizeText(totalDays),
+        },
+        {
+          type: "text",
+          text: sanitizeText(reason),
         },
       ],
     },
@@ -26,7 +71,7 @@ const sendWhatsappMessageHod = async (req, res) => {
       parameters: [
         {
           type: "text",
-          text: dynamicLink,
+          text: dynamicLink, // Dynamic URL suffix for approval link
         },
       ],
     },
@@ -38,7 +83,6 @@ const sendWhatsappMessageHod = async (req, res) => {
     templateLanguage,
     enhancedComponents,
   );
-
   try {
     const response = await axiosclient.post("/messages", payLoad);
     console.log(response.data);

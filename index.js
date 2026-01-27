@@ -1,7 +1,11 @@
 import express from "express";
 import cors from "cors";
-import { sendWhatsappMessage } from "./src/controller/sendWhatsappMessage.controller.js";
+import { sendWhatsappMessage } from "./src/controller/sendWhatsappMessageHr.js";
 import { sendWhatsappMessageHod } from "./src/controller/sendWhatsappMessageHod.controller.js";
+import {
+  sendLeaveApprovedMessage,
+  sendLeaveRejectedMessage,
+} from "./src/controller/sendWhatsappMessageEmployee.controller.js";
 
 const app = express();
 
@@ -22,8 +26,16 @@ app.get("/api", (req, res) => {
   });
 });
 
-app.post("/api/send-whatsappMessage", sendWhatsappMessage);
+app.post("/api/send-whatsappMessage-hr", sendWhatsappMessage);
 app.post("/api/send-whatsappMessage-hod", sendWhatsappMessageHod);
+app.post(
+  "/api/send-whatsappMessage-employee-approved",
+  sendLeaveApprovedMessage,
+);
+app.post(
+  "/api/send-whatsappMessage-employee-rejected",
+  sendLeaveRejectedMessage,
+);
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
