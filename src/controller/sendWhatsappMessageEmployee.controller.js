@@ -10,6 +10,57 @@ const sanitizeText = (text) => {
     .trim();
 };
 
+// List of employees for which Abhishek should also receive a notification
+const ABHISHEK_NOTIFICATION_EMPLOYEES = [
+  "Dinesh Yadav",
+  "Pawan Tiwari",
+  "Ram Kumar Sahu",
+  "R.K Mahapatro",
+  "Priti Sahu",
+  "Dharmendar",
+  "ASHISH SAHU",
+  "RAGHUVENDRA PRASAD TIWARI",
+  "Kartikesh Kumar Sinha",
+  "Akash Agrawal",
+  "Parth Sahu",
+  "R.N Rawat",
+  "P.C Rao",
+  "Dilendra bhagat",
+  "Kushal Rathod",
+  "Pramod kumar sahu",
+  "Sumit raj",
+  "Shankar",
+  "Hari om shukla",
+  "Anant kumar Shukla",
+  "Tekeshwar Sahu",
+  "Rajeev lochn sharma",
+  "Punaram Niramalkar",
+  "Mahendra",
+  "Akash Pandilwar",
+  "Gaurav Pathak",
+  "Parmeshwer",
+  "Radheshyam Vishwakarma",
+  "Sanjiv Rathor",
+  "Abhiraj Mishra",
+  "Ranjeet",
+  "Kapil Dwivedi",
+  "Sunil",
+  "Anitosh",
+  "Pawan Sahu",
+  "Rohini Jaiswal",
+];
+
+// Helper to check if employee name matches any in the list (case-insensitive)
+const shouldNotifyAbhishek = (employeeName) => {
+  if (!employeeName) return false;
+  const normalizedName = employeeName.toLowerCase().trim();
+  return ABHISHEK_NOTIFICATION_EMPLOYEES.some(
+    (name) =>
+      normalizedName.includes(name.toLowerCase()) ||
+      name.toLowerCase().includes(normalizedName),
+  );
+};
+
 // Template D: HR Approves → Final Message to Employee
 const sendLeaveApprovedMessage = async (req, res) => {
   console.log("Sending leave approved message to employee");
@@ -24,7 +75,7 @@ const sendLeaveApprovedMessage = async (req, res) => {
   } = req.body;
 
   const phoneNumber = employeePhone;
-  const templateName = "leave_approved_final";
+  const templateName = "final_approval_user_template";
   const templateLanguage = "en_US";
 
   const enhancedComponents = [
@@ -69,6 +120,58 @@ const sendLeaveApprovedMessage = async (req, res) => {
   try {
     const response = await axiosclient.post("/messages", payLoad);
     console.log("Leave approved message sent:", response.data);
+
+    // Check if we should also notify Abhishek
+    if (shouldNotifyAbhishek(employeeName)) {
+      console.log(
+        "Employee matches Abhishek notification list, sending additional message...",
+      );
+
+      const abhishekPhone = process.env.ABHISHEK_NUMBER;
+      const abhishekTemplate = "final_approval_abhishek";
+
+      const abhishekComponents = [
+        {
+          type: "body",
+          parameters: [
+            {
+              type: "text",
+              text: sanitizeText(employeeName),
+            },
+            {
+              type: "text",
+              text: sanitizeText(fromDate),
+            },
+            {
+              type: "text",
+              text: sanitizeText(toDate),
+            },
+          ],
+        },
+      ];
+
+      const abhishekPayload = sendPayloadForWhatsappMessage(
+        abhishekPhone,
+        abhishekTemplate,
+        templateLanguage,
+        abhishekComponents,
+      );
+
+      try {
+        const abhishekResponse = await axiosclient.post(
+          "/messages",
+          abhishekPayload,
+        );
+        console.log("Abhishek notification sent:", abhishekResponse.data);
+      } catch (abhishekError) {
+        console.log(
+          "WhatsApp API Error (Abhishek):",
+          abhishekError.response?.data || abhishekError.message,
+        );
+        // Don't fail the main request if Abhishek notification fails
+      }
+    }
+
     res.json(response.data);
   } catch (error) {
     console.log("WhatsApp API Error:", error.response?.data || error.message);
@@ -91,9 +194,10 @@ const sendLeaveRejectedMessage = async (req, res) => {
     hrRemarks,
   } = req.body;
 
+  console.log(fromDate, toDate, totalDays, hrRemarks, employeeName, leaveType);
   const phoneNumber = employeePhone;
-  const templateName = "leave_rejected_final";
-  const templateLanguage = "hi";
+  const templateName = "final_rejection_user_template";
+  const templateLanguage = "en_US";
 
   const enhancedComponents = [
     {
@@ -114,14 +218,6 @@ const sendLeaveRejectedMessage = async (req, res) => {
         {
           type: "text",
           text: sanitizeText(toDate),
-        },
-        {
-          type: "text",
-          text: sanitizeText(totalDays),
-        },
-        {
-          type: "text",
-          text: sanitizeText(hrRemarks) || "No remarks provided",
         },
       ],
     },

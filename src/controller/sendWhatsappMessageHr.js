@@ -11,7 +11,6 @@ const sanitizeText = (text) => {
 };
 
 const sendWhatsappMessage = async (req, res) => {
-  console.log("this is going");
   const { employeId, tableid } = req.query;
   const {
     whomtoSend,
@@ -26,7 +25,7 @@ const sendWhatsappMessage = async (req, res) => {
     who,
   } = req.body;
   const phoneNumber = whomtoSend;
-  const templateName = "hr_approve";
+  const templateName = "hr_approve_new";
   const templateLanguage = "en_US";
   const dynamicLink = `${employeId}/${tableid}`;
   const enhancedComponents = [
@@ -76,6 +75,10 @@ const sendWhatsappMessage = async (req, res) => {
     },
   ];
 
+
+
+
+
   const payLoad = sendPayloadForWhatsappMessage(
     phoneNumber,
     templateName,
@@ -83,7 +86,6 @@ const sendWhatsappMessage = async (req, res) => {
     enhancedComponents,
   );
 
-  console.log(payLoad, "paylod");
   try {
     const response = await axiosclient.post("/messages", payLoad);
     console.log(response.data);
