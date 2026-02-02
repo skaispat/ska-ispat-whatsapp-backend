@@ -6,6 +6,7 @@ import {
   sendLeaveApprovedMessage,
   sendLeaveRejectedMessage,
 } from "./src/controller/sendWhatsappMessageEmployee.controller.js";
+import { sendAttendancePdfWhatsapp } from "./src/controller/sendAttendancePdfWhatsapp.controller.js";
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.post(
   "/api/send-whatsappMessage-employee-rejected",
   sendLeaveRejectedMessage,
 );
+// Attendance PDF WhatsApp route
+app.post("/api/send-attendance-pdf-whatsapp", sendAttendancePdfWhatsapp);
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
