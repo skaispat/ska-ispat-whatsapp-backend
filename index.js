@@ -7,6 +7,12 @@ import {
   sendLeaveRejectedMessage,
 } from "./src/controller/sendWhatsappMessageEmployee.controller.js";
 import { sendAttendancePdfWhatsapp } from "./src/controller/sendAttendancePdfWhatsapp.controller.js";
+import {
+  sendGatePassMessageToHod,
+  sendGatePassMessageToHr,
+  sendGatePassApprovedToEmployee,
+  sendGatePassRejectedToEmployee,
+} from "./src/controller/sendGatePassWhatsapp.controller.js";
 
 const app = express();
 
@@ -27,6 +33,7 @@ app.get("/api", (req, res) => {
   });
 });
 
+// Leave approval routes
 app.post("/api/send-whatsappMessage-hr", sendWhatsappMessage);
 app.post("/api/send-whatsappMessage-hod", sendWhatsappMessageHod);
 app.post(
@@ -37,8 +44,15 @@ app.post(
   "/api/send-whatsappMessage-employee-rejected",
   sendLeaveRejectedMessage,
 );
+
 // Attendance PDF WhatsApp route
 app.post("/api/send-attendance-pdf-whatsapp", sendAttendancePdfWhatsapp);
+
+// Gate Pass WhatsApp routes
+app.post("/api/send-gatepass-whatsapp-hod", sendGatePassMessageToHod);
+app.post("/api/send-gatepass-whatsapp-hr", sendGatePassMessageToHr);
+app.post("/api/send-gatepass-whatsapp-employee-approved", sendGatePassApprovedToEmployee);
+app.post("/api/send-gatepass-whatsapp-employee-rejected", sendGatePassRejectedToEmployee);
 
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
