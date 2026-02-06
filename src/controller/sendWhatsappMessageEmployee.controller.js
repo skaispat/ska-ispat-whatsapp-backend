@@ -242,4 +242,67 @@ const sendLeaveRejectedMessage = async (req, res) => {
   }
 };
 
-export { sendLeaveApprovedMessage, sendLeaveRejectedMessage };
+// Template: HOD Rejects → Rejection Message to Employee from HOD
+const sendLeaveHodRejectedMessage = async (req, res) => {
+  console.log("Sending leave HOD rejected message to employee");
+  const {
+    employeePhone,
+    employeeName,
+    leaveType,
+    fromDate,
+    toDate,
+  } = req.body;
+
+  console.log(fromDate, toDate, employeeName, leaveType);
+  const phoneNumber = employeePhone;
+  const templateName = "hod_reject";
+  const templateLanguage = "en_US";
+
+  const enhancedComponents = [
+    {
+      type: "body",
+      parameters: [
+        {
+          type: "text",
+          text: sanitizeText(employeeName), // {{1}} - Employee name
+        },
+        {
+          type: "text",
+          text: "leave request", // {{2}} - "pending task" placeholder
+        },
+        {
+          type: "text",
+          text: sanitizeText(leaveType), // {{3}} - Leave type
+        },
+        {
+          type: "text",
+          text: sanitizeText(fromDate), // {{4}} - From date
+        },
+        {
+          type: "text",
+          text: sanitizeText(toDate), // {{5}} - To date
+        },
+      ],
+    },
+  ];
+
+  const payLoad = sendPayloadForWhatsappMessage(
+    phoneNumber,
+    templateName,
+    templateLanguage,
+    enhancedComponents,
+  );
+
+  try {
+    const response = await axiosclient.post("/messages", payLoad);
+    console.log("Leave HOD rejected message sent:", response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.log("WhatsApp API Error:", error.response?.data || error.message);
+    res.status(error.response?.status || 500).json({
+      error: error.response?.data || error.message,
+    });
+  }
+};
+
+export { sendLeaveApprovedMessage, sendLeaveRejectedMessage, sendLeaveHodRejectedMessage };

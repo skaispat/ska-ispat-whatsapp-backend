@@ -215,10 +215,6 @@ const sendGatePassMessageToHr = async (req, res) => {
     }
 };
 
-/**
- * Gate Pass Approved Message to Employee
- * Template: final_approval_user_template (reusing existing template)
- */
 const sendGatePassApprovedToEmployee = async (req, res) => {
     console.log("Sending gate pass approved message to employee");
     const {
@@ -232,7 +228,7 @@ const sendGatePassApprovedToEmployee = async (req, res) => {
     } = req.body;
 
     const phoneNumber = employeePhone;
-    const templateName = "final_approval_user_template";
+    const templateName = "gate_pass_final_approve_user"; // Updated template name
     const templateLanguage = "en_US";
 
     const enhancedComponents = [
@@ -241,27 +237,35 @@ const sendGatePassApprovedToEmployee = async (req, res) => {
             parameters: [
                 {
                     type: "text",
-                    text: sanitizeText(employeeName),
+                    text: sanitizeText(employeeName), // {{1}} Employee Name
                 },
                 {
                     type: "text",
-                    text: sanitizeText(leaveType || "Gate Pass"),
+                    text: sanitizeText("Gate Pass"), // {{2}} Request type for "आपका {{2}} request..."
                 },
                 {
                     type: "text",
-                    text: sanitizeText(fromDate),
+                    text: sanitizeText("Gate Pass"), // {{3}} Details Header for "SKA ISPAT – {{3}} Details:"
                 },
                 {
                     type: "text",
-                    text: sanitizeText(toDate),
+                    text: sanitizeText(leaveType || "Gate Pass"), // {{4}} Leave/Pass Type
                 },
                 {
                     type: "text",
-                    text: sanitizeText(totalDays || "N/A"),
+                    text: sanitizeText(fromDate), // {{5}} From Date
                 },
                 {
                     type: "text",
-                    text: sanitizeText(reason),
+                    text: sanitizeText(toDate), // {{6}} To Date
+                },
+                {
+                    type: "text",
+                    text: sanitizeText(totalDays || "N/A"), // {{7}} Total Duration
+                },
+                {
+                    type: "text",
+                    text: sanitizeText(reason), // {{8}} Reason
                 },
             ],
         },
@@ -303,7 +307,7 @@ const sendGatePassRejectedToEmployee = async (req, res) => {
     } = req.body;
 
     const phoneNumber = employeePhone;
-    const templateName = "final_rejection_user_template";
+    const templateName = "final_get_pass_rejection_user_template"; // Updated template name
     const templateLanguage = "en_US";
 
     const enhancedComponents = [
@@ -312,19 +316,27 @@ const sendGatePassRejectedToEmployee = async (req, res) => {
             parameters: [
                 {
                     type: "text",
-                    text: sanitizeText(employeeName),
+                    text: sanitizeText(employeeName), // {{1}} Employee Name
                 },
                 {
                     type: "text",
-                    text: sanitizeText(leaveType || "Gate Pass"),
+                    text: sanitizeText("Gate Pass"), // {{2}} Request type for "आपका {{2}} request..."
                 },
                 {
                     type: "text",
-                    text: sanitizeText(fromDate),
+                    text: sanitizeText("Gate Pass"), // {{3}} Details Header for "SKA ISPAT – {{3}} Details:"
                 },
                 {
                     type: "text",
-                    text: sanitizeText(toDate),
+                    text: sanitizeText(leaveType || "Gate Pass"), // {{4}} Leave/Pass Type
+                },
+                {
+                    type: "text",
+                    text: sanitizeText(fromDate), // {{5}} From Date
+                },
+                {
+                    type: "text",
+                    text: sanitizeText(toDate), // {{6}} To Date
                 },
             ],
         },
@@ -349,9 +361,83 @@ const sendGatePassRejectedToEmployee = async (req, res) => {
     }
 };
 
+/**
+ * Gate Pass HOD Rejected Message to Employee
+ * Template: hod_reject (same template as leave HOD rejection)
+ * Variables:
+ * {{1}} = Employee name
+ * {{2}} = Request type (e.g., "gate pass request")
+ * {{3}} = Leave type (e.g., "Gate Pass")
+ * {{4}} = From date
+ * {{5}} = To date
+ */
+const sendGatePassHodRejectedToEmployee = async (req, res) => {
+    console.log("Sending gate pass HOD rejected message to employee");
+    const {
+        employeePhone,
+        employeeName,
+        requestType,
+        leaveType,
+        fromDate,
+        toDate,
+    } = req.body;
+
+    console.log(fromDate, toDate, employeeName, leaveType, requestType);
+    const phoneNumber = employeePhone;
+    const templateName = "hod_reject";
+    const templateLanguage = "en_US";
+
+    const enhancedComponents = [
+        {
+            type: "body",
+            parameters: [
+                {
+                    type: "text",
+                    text: sanitizeText(employeeName), // {{1}} - Employee name
+                },
+                {
+                    type: "text",
+                    text: sanitizeText(requestType || "Gate Pass Request"), // {{2}} - Request type (dynamic)
+                },
+                {
+                    type: "text",
+                    text: sanitizeText(leaveType || "Gate Pass"), // {{3}} - Leave type
+                },
+                {
+                    type: "text",
+                    text: sanitizeText(fromDate), // {{4}} - From date
+                },
+                {
+                    type: "text",
+                    text: sanitizeText(toDate), // {{5}} - To date
+                },
+            ],
+        },
+    ];
+
+    const payLoad = sendPayloadForWhatsappMessage(
+        phoneNumber,
+        templateName,
+        templateLanguage,
+        enhancedComponents,
+    );
+
+    try {
+        const response = await axiosclient.post("/messages", payLoad);
+        console.log("Gate pass HOD rejected message sent:", response.data);
+        res.json(response.data);
+    } catch (error) {
+        console.log("WhatsApp API Error:", error.response?.data || error.message);
+        res.status(error.response?.status || 500).json({
+            error: error.response?.data || error.message,
+        });
+    }
+};
+
 export {
     sendGatePassMessageToHod,
     sendGatePassMessageToHr,
     sendGatePassApprovedToEmployee,
     sendGatePassRejectedToEmployee,
+    sendGatePassHodRejectedToEmployee,
 };
